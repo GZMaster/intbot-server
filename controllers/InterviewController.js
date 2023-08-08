@@ -1,5 +1,7 @@
 // const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
+const { Configuration, OpenAIApi } = require("openai");
 const AppError = require("../utils/appError");
 const {
   InterviewRoom,
@@ -7,6 +9,16 @@ const {
   BotResponse,
 } = require("../models/InterviewRoomModel");
 const { User } = require("../models/userModel");
+
+dotenv.config({ path: "./config.env" });
+
+// OpenAI API
+const configuration = new Configuration({
+  organization: process.env.OPENAI_ORGANIZATION_ID,
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
 
 exports.userJoin = async (token, username, room) => {
   try {
@@ -78,9 +90,32 @@ exports.botResponse = async (token, room, message) => {
       throw new AppError("User not joined", 400);
     }
 
+    const prompt = `The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.
+    Human: Hello, who are you?
+    AI: I am an AI created by OpenAI. How can I help you today?
+    Human: ${message}
+    AI:`;
+
+    const gptResponse = await openai.complete({
+      engine: "davinci",
+      prompt,
+      maxTokens: 150,
+      temperature: 0.9,
+      topP: 1,
+      presencePenalty: 0.6,
+      frequencyPenalty: 0.6,
+      bestOf: 1,
+      n: 1,
+      stream: false,
+      stop: ["\n", " Human:", " AI:"],
+    });
+
+    const { choices } = gptResponse.data;
+    const { text } = choices[0];
+
     const newBotResponse = new BotResponse({
       userId: user._id,
-      reply: message,
+      reply: text,
       roomid: interview._id,
     });
 
