@@ -1,11 +1,17 @@
 const fs = require("fs");
-const OpenAI = require("openai");
+const dotenv = require("dotenv");
+const { Configuration, OpenAIApi } = require("openai");
 const { Chat, Message, BotResponse } = require("../models/chatModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const ApiFeatures = require("../utils/apiFeatures");
 
-const openai = new OpenAI("YOUR_OPENAI_API_KEY");
+dotenv.config({ path: "./config.env" });
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
 exports.getChat = catchAsync(async (req, res, next) => {
   const chat = await Chat.findById(req.params.id);
@@ -110,10 +116,10 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
 
   // 2. Transcribe the audio using OpenAI
   try {
-    const transcription = await openai.audio.transcriptions.create({
-      file: fs.createReadStream(audioPath),
-      model: "whisper-1",
-    });
+    const transcription = await openai.createTranslation(
+      fs.createReadStream(audioPath),
+      "whisper-1"
+    );
 
     // Delete the temporary audio file
     fs.unlinkSync(audioPath);
