@@ -1,12 +1,12 @@
 /* eslint-disable no-console */
-const socket = require("socket.io");
+// const socket = require("socket.io");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const {
-  userJoin,
-  message,
-  userLeave,
-} = require("./controllers/InterviewController");
+// const {
+//   userJoin,
+//   message,
+//   userLeave,
+// } = require("./controllers/InterviewController");
 
 // Uncaught Exception
 process.on("uncaughtException", (err) => {
@@ -46,55 +46,55 @@ process.on("unhandledRejection", (err) => {
   });
 });
 
-const io = socket(server);
+// const io = socket(server);
 
-io.on("connection", (newSocket) => {
-  newSocket.on("joinRoom", async ({ token, username, room }) => {
-    try {
-      const { user, interview } = await userJoin(token, username, room);
-      newSocket.join(interview._id);
-      newSocket.emit("message", {
-        userId: user._id,
-        username: user.username,
-        text: `Welcome to ${interview.interviewRoomName} interview room`,
-      });
-      newSocket.broadcast.to(interview._id).emit("message", {
-        userId: user._id,
-        username: user.username,
-        text: `${user.username} has joined the chat`,
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  });
+// io.on("connection", (newSocket) => {
+//   newSocket.on("joinRoom", async ({ token, username, room }) => {
+//     try {
+//       const { user, interview } = await userJoin(token, username, room);
+//       newSocket.join(interview._id);
+//       newSocket.emit("message", {
+//         userId: user._id,
+//         username: user.username,
+//         text: `Welcome to ${interview.interviewRoomName} interview room`,
+//       });
+//       newSocket.broadcast.to(interview._id).emit("message", {
+//         userId: user._id,
+//         username: user.username,
+//         text: `${user.username} has joined the chat`,
+//       });
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   });
 
-  //when somebody send text
-  newSocket.on("chat", async ({ token, room, messageText }) => {
-    try {
-      const newMessage = await message(token, room, messageText);
-      io.to(room).emit("message", {
-        userId: newMessage.userId,
-        username: "bot",
-        text: newMessage.reply,
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  });
+//   //when somebody send text
+//   newSocket.on("chat", async ({ token, room, messageText }) => {
+//     try {
+//       const newMessage = await message(token, room, messageText);
+//       io.to(room).emit("message", {
+//         userId: newMessage.userId,
+//         username: "bot",
+//         text: newMessage.reply,
+//       });
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   });
 
-  // Disconnect , when user leave room
-  newSocket.on("disconnect", async () => {
-    try {
-      const user = await userLeave(newSocket.id);
-      if (user) {
-        io.to(user.room).emit("message", {
-          userId: user.id,
-          username: user.username,
-          text: `${user.username} has left the chat`,
-        });
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  });
-});
+//   // Disconnect , when user leave room
+//   newSocket.on("disconnect", async () => {
+//     try {
+//       const user = await userLeave(newSocket.id);
+//       if (user) {
+//         io.to(user.room).emit("message", {
+//           userId: user.id,
+//           username: user.username,
+//           text: `${user.username} has left the chat`,
+//         });
+//       }
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   });
+// });
