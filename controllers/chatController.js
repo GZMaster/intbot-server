@@ -116,10 +116,10 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
 
   // 2. Transcribe the audio using OpenAI
   try {
-    const transcription = await openai.audio.transcriptions.create({
-      file: fs.createReadStream(audioPath),
-      model: "whisper-1",
-    });
+    const transcription = await openai.createTranslation(
+      fs.createReadStream(audioPath),
+      "whisper-1"
+    );
 
     // Delete the temporary audio file
     fs.unlinkSync(audioPath);
