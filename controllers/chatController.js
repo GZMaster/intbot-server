@@ -201,6 +201,56 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
   }
 });
 
+exports.sendText = catchAsync(async (req, res, next) => {
+  const { userId, text, roomId } = req.body;
+
+  if (!text || text.trim().length === 0) {
+    return next(new AppError("Text message cannot be empty.", 400));
+  }
+
+  // 1. Save the user's text message to the database
+  const userMessage = new Message({
+    userId,
+    roomId,
+    text: text,
+    // ... other fields
+  });
+
+  await userMessage.save();
+
+  // 2. Get a response from OpenAI GPT-4
+  try {
+    const gptResponse = await openai.createCompletion({
+      prompt: text,
+      max_tokens: 150, // You can adjust this based on your needs
+      // ... other GPT-4 parameters
+    });
+
+    const botResponseText = gptResponse.data.choices[0].text.trim();
+
+    // 3. Save the bot's response to the database
+    const botResponse = new BotResponse({
+      userId: userId, // You may want to use a different ID for the bot or a generic one
+      roomId: roomId,
+      text: botResponseText,
+      // ... other fields
+    });
+
+    await botResponse.save();
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        userMessage,
+        botResponse,
+      },
+    });
+  } catch (error) {
+    // Handle errors from OpenAI or other parts of the code
+    return next(new AppError("Error getting a response from the bot.", 500));
+  }
+});
+
 exports.getResponse = catchAsync(async (req, res, next) => {
   const { userId, reply, roomid } = req.body;
 

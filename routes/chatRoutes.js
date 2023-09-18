@@ -21,6 +21,8 @@ router.post(
   chatController.sendMessage
 );
 
+router.post("/sendText", userController.protect, chatController.sendText);
+
 router.post("/getResponse", userController.protect, chatController.getResponse);
 
 module.exports = router;
