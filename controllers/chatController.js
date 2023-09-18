@@ -1,5 +1,7 @@
 const fs = require("fs");
+const path = require("path");
 const dotenv = require("dotenv");
+const multer = require("multer");
 const { Configuration, OpenAIApi } = require("openai");
 const { Chat, Message, BotResponse } = require("../models/chatModel");
 const catchAsync = require("../utils/catchAsync");
@@ -12,6 +14,43 @@ const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, `./public/audio`); // Store audio files in a 'audio' directory
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(
+      null,
+      `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`
+    );
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  // Accept audio files only
+  if (
+    file.mimetype === "audio/mpeg" || // For MP3 files
+    file.mimetype === "audio/wav" || // For WAV files
+    file.mimetype === "audio/flac" // For FLAC files
+    // Add other audio types if needed
+  ) {
+    return cb(null, true);
+  }
+  return cb(
+    new AppError("Invalid file type! Please upload only audio files.", 400),
+    false
+  );
+};
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 1024 * 1024 * 50 }, // Adjusted the limit to 50MB for audio files; you can change this based on your needs
+  fileFilter: fileFilter,
+});
+
+exports.uploadAudio = upload.single("audio");
 
 exports.getChat = catchAsync(async (req, res, next) => {
   const chat = await Chat.findById(req.params.id);
@@ -110,8 +149,11 @@ exports.deleteChat = catchAsync(async (req, res, next) => {
 // ... Other imports and setup
 
 exports.sendMessage = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+
   // 1. Store the incoming audio
-  const audioPath = "temp_audio.mp3";
+  const audioPath = `./public/audio/${Date.now()}.mp3`;
+
   fs.writeFileSync(audioPath, req.body.audio); // Assuming audio data is in req.body.audio
 
   // 2. Transcribe the audio using OpenAI
@@ -128,7 +170,7 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
 
     // 3. Save the transcribed message to the database
     const message = new Message({
-      userId: req.body.userId,
+      userId,
       roomId: req.body.roomId,
       text: messageText,
       // ... other fields

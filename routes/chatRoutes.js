@@ -14,7 +14,12 @@ router.patch("/updateChat/:id", chatController.updateChat);
 
 router.delete("/deleteChat/:id", chatController.deleteChat);
 
-router.post("/sendMessage", userController.protect, chatController.sendMessage);
+router.post(
+  "/sendMessage",
+  userController.protect,
+  chatController.uploadAudio,
+  chatController.sendMessage
+);
 
 router.post("/getResponse", userController.protect, chatController.getResponse);
 
