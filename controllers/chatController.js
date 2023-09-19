@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
 const multer = require("multer");
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");
 const { Chat, Message, BotResponse } = require("../models/chatModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
@@ -10,10 +10,9 @@ const ApiFeatures = require("../utils/apiFeatures");
 
 dotenv.config({ path: "./config.env" });
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -202,7 +201,9 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
 });
 
 exports.sendText = catchAsync(async (req, res, next) => {
-  const { userId, text, roomId } = req.body;
+  const userId = req.user.id;
+
+  const { text, roomId } = req.body;
 
   if (!text || text.trim().length === 0) {
     return next(new AppError("Text message cannot be empty.", 400));
@@ -213,42 +214,37 @@ exports.sendText = catchAsync(async (req, res, next) => {
     userId,
     roomId,
     text: text,
-    // ... other fields
   });
 
   await userMessage.save();
 
   // 2. Get a response from OpenAI GPT-4
-  try {
-    const gptResponse = await openai.createCompletion({
-      prompt: text,
-      max_tokens: 150, // You can adjust this based on your needs
-      // ... other GPT-4 parameters
-    });
+  const completion = await openai.chat.completions.create({
+    messages: [{ role: "system", content: "You are a helpful assistant." }],
+    model: "gpt-4",
+  });
 
-    const botResponseText = gptResponse.data.choices[0].text.trim();
+  const { content } = await completion.choices[0].message;
 
-    // 3. Save the bot's response to the database
-    const botResponse = new BotResponse({
-      userId: userId, // You may want to use a different ID for the bot or a generic one
-      roomId: roomId,
-      text: botResponseText,
-      // ... other fields
-    });
+  const botResponseText = content;
 
-    await botResponse.save();
+  // 3. Save the bot's response to the database
+  const botResponse = new BotResponse({
+    userId: userId, // You may want to use a different ID for the bot or a generic one
+    roomId: roomId,
+    reply: botResponseText,
+    // ... other fields
+  });
 
-    res.status(200).json({
-      status: "success",
-      data: {
-        userMessage,
-        botResponse,
-      },
-    });
-  } catch (error) {
-    // Handle errors from OpenAI or other parts of the code
-    return next(new AppError("Error getting a response from the bot.", 500));
-  }
+  await botResponse.save();
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      userMessage,
+      botResponse,
+    },
+  });
 });
 
 exports.getResponse = catchAsync(async (req, res, next) => {

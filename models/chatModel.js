@@ -7,7 +7,7 @@ const messageSchema = new mongoose.Schema(
     roomid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
-      required: true,
+      required: false,
     },
   },
   {
@@ -22,7 +22,7 @@ const botResponseSchema = new mongoose.Schema(
     roomid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
-      required: true,
+      required: false,
     },
   },
   {
