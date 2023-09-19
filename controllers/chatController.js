@@ -220,7 +220,7 @@ exports.sendText = catchAsync(async (req, res, next) => {
 
   // 2. Get a response from OpenAI GPT-4
   const completion = await openai.chat.completions.create({
-    messages: [{ role: "system", content: "You are a helpful assistant." }],
+    messages: [{ role: "human", content: text }],
     model: "gpt-4",
   });
 
