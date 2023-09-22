@@ -234,7 +234,7 @@ exports.sendText = catchAsync(async (req, res, next) => {
       {
         role: "system",
         content:
-          "You are an Interviewer and you are interviewing a student about their experience in thier place of work during their IT in nigeria, ask questions relating to where and naturer of work they did. ask one question and wait for the user turn to answer it. ask a different question each time",
+          "You are an Interviewer and you are interviewing a student about their experience in thier place of work during their IT in nigeria, ask questions relating to where and naturer of work they did. ask one question and wait for the user turn to answer it. check the message from the user and ask another question. continue this process until you are satisfied with the interview",
       },
       ...messages,
     ],
