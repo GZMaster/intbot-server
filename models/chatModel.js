@@ -30,6 +30,21 @@ const botResponseSchema = new mongoose.Schema(
   }
 );
 
+const scoreSchema = new mongoose.Schema(
+  {
+    userId: String,
+    score: String,
+    roomid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Chat",
+      required: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const chatSchema = new mongoose.Schema(
   {
     userId: String,
@@ -47,5 +62,6 @@ const chatSchema = new mongoose.Schema(
 const Chat = mongoose.model("Chat", chatSchema);
 const Message = mongoose.model("Message", messageSchema);
 const BotResponse = mongoose.model("BotResponse", botResponseSchema);
+const Score = mongoose.model("Score", scoreSchema);
 
-module.exports = { Chat, Message, BotResponse };
+module.exports = { Chat, Message, BotResponse, Score };

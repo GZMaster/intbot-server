@@ -3,7 +3,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 const multer = require("multer");
 const OpenAI = require("openai");
-const { Chat, Message, BotResponse } = require("../models/chatModel");
+const { Chat, Message, BotResponse, Score } = require("../models/chatModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const ApiFeatures = require("../utils/apiFeatures");
@@ -218,9 +218,26 @@ exports.sendText = catchAsync(async (req, res, next) => {
 
   await userMessage.save();
 
+  // Get the last 3 messages from the database
+  const userMessages = await Message.find({ roomId: roomId });
+
+  const messages = [
+    ...userMessages.slice(-3).map((message) => ({
+      role: "user",
+      content: message.text,
+    })),
+  ];
+
   // 2. Get a response from OpenAI GPT-4
   const completion = await openai.chat.completions.create({
-    messages: [{ role: "user", content: text }],
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are an Interviewer and you are interviewing a student about their experience in thier place of work during their IT in nigeria, ask questions relating to where and naturer of work they did.",
+      },
+      ...messages,
+    ],
     model: "gpt-4",
   });
 
@@ -260,6 +277,51 @@ exports.getResponse = catchAsync(async (req, res, next) => {
     status: "success",
     data: {
       botResponse,
+    },
+  });
+});
+
+exports.getScore = catchAsync(async (req, res, next) => {
+  const { userId } = req.user.id;
+  const { roomId } = req.body;
+
+  const userMessages = await Message.find({ roomId: roomId });
+
+  const messages = [
+    ...userMessages.slice(-3).map((message) => ({
+      role: "user",
+      content: message.text,
+    })),
+  ];
+
+  // 2. Get a response from OpenAI GPT-4
+  const completion = await openai.chat.completions.create({
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are an Interviewer and you are interviewing a student about their experience in thier place of work during their IT in nigeria, based on this conversation, rate the student's performance.",
+      },
+      ...messages,
+    ],
+    model: "gpt-4",
+  });
+
+  const { content } = await completion.choices[0].message;
+
+  // 3. Save the bot's response to the database
+  const score = new Score({
+    userId: userId,
+    roomId: roomId,
+    score: content,
+  });
+
+  await score.save();
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      score,
     },
   });
 });
