@@ -210,6 +210,7 @@ exports.sendText = catchAsync(async (req, res, next) => {
   }
 
   // 1. Save the user's text message to the database
+
   const userMessage = new Message({
     userId,
     roomId,
@@ -231,7 +232,7 @@ exports.sendText = catchAsync(async (req, res, next) => {
   let completion;
 
   // Check if the user's message is the first message in the room
-  if (messages.length === 0) {
+  if (userMessages.length === 0) {
     completion = await openai.chat.completions.create({
       messages: [
         {

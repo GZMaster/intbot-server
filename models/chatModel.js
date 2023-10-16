@@ -4,7 +4,7 @@ const messageSchema = new mongoose.Schema(
   {
     userId: String,
     text: String,
-    roomid: {
+    roomId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
       required: false,
@@ -19,7 +19,7 @@ const botResponseSchema = new mongoose.Schema(
   {
     userId: String,
     reply: String,
-    roomid: {
+    roomId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
       required: false,
@@ -34,7 +34,7 @@ const scoreSchema = new mongoose.Schema(
   {
     userId: String,
     score: String,
-    roomid: {
+    roomId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
       required: false,
