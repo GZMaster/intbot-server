@@ -231,8 +231,6 @@ exports.sendText = catchAsync(async (req, res, next) => {
 
   let completion;
 
-  console.log(userMessages);
-
   // Check if the user's message is the first message in the room
   if (userMessages.length === 0) {
     completion = await openai.chat.completions.create({
