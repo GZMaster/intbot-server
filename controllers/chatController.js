@@ -228,18 +228,35 @@ exports.sendText = catchAsync(async (req, res, next) => {
     })),
   ];
 
-  // 2. Get a response from OpenAI GPT-4
-  const completion = await openai.chat.completions.create({
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are an Interviewer and you are interviewing a student about their experience in thier place of work during their IT in nigeria, ask questions relating to where and naturer of work they did. ask one question and wait for the user turn to answer it. check the message from the user and ask another question. continue this process until you are satisfied with the interview",
-      },
-      ...messages,
-    ],
-    model: "gpt-4",
-  });
+  let completion;
+
+  // Check if the user's message is the first message in the room
+  if (messages.length === 0) {
+    completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an Interviewer and you are interviewing a student about their experience in thier place of work during their IT in nigeria, ask questions relating to where and naturer of work they did. ask one question and wait for the user turn to answer it. check the message from the user and ask another question. continue this process until you are satisfied with the interview",
+        },
+        ...messages,
+      ],
+      model: "gpt-4",
+    });
+  } else {
+    // 2. Get a response from OpenAI GPT-4
+    completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an Interviewer and you are interviewing a student about their experience in thier place of work during their IT in nigeria, the student has answered your question, ask another question. continue this process until you are satisfied with the interview",
+        },
+        ...messages,
+      ],
+      model: "gpt-4",
+    });
+  }
 
   const { content } = await completion.choices[0].message;
 
