@@ -318,7 +318,7 @@ exports.getScore = catchAsync(async (req, res, next) => {
       {
         role: "system",
         content:
-          "You are an Interviewer and you are interviewing a student about their experience in thier place of work during their IT in nigeria, based on this conversation, rate the student's performance.",
+          "You are an Interviewer based on this conversation, rate the student's performance.",
       },
       ...messages,
     ],
