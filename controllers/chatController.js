@@ -339,7 +339,7 @@ exports.getScore = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: {
-      score,
+      score: score.score,
     },
   });
 });
