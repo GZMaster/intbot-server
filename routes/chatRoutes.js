@@ -22,6 +22,7 @@ router.post(
 );
 
 router.post("/sendText", userController.protect, chatController.sendText);
+router.post("/getScore", userController.protect, chatController.getScore);
 
 router.post("/getResponse", userController.protect, chatController.getResponse);
 
